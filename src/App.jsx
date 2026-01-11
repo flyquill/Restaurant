@@ -239,9 +239,14 @@ export default function App() {
         )}
 
         {activeView === "reports" && (
-          <h1 className="text-3xl font-bold">
-            Reports (Coming Soon)
-          </h1>
+          <>
+            <h1 className="text-3xl font-bold">
+              Reports
+            </h1>
+            <Summary
+              orders={orders}
+            />
+          </>
         )}
 
         {activeView === "products" && (
