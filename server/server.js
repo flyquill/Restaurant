@@ -4,6 +4,8 @@
 // routes, and starts the server.
 // ============================================
 
+const path = require('path');
+
 const express = require('express');
 const cors = require('cors');
 const { initDatabase } = require('./database/db');
@@ -23,6 +25,10 @@ const itemsRoutes = require('./routes/items');
 const tablesRoutes = require('./routes/tables');
 const waitersRoutes = require('./routes/waiters');
 const ordersRoutes = require('./routes/orders');
+// Phase 2 Routes
+const inventoryRoutes = require('./routes/inventory');
+const reportsRoutes = require('./routes/reports');
+const settingsRoutes = require('./routes/settings');
 
 // ---- Connect Routes ----
 app.use('/api/auth', authRoutes);
@@ -31,6 +37,12 @@ app.use('/api/items', itemsRoutes);
 app.use('/api/tables', tablesRoutes);
 app.use('/api/waiters', waitersRoutes);
 app.use('/api/orders', ordersRoutes);
+// Phase 2 Connections
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/settings', settingsRoutes);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ---- Health check ----
 app.get('/api/health', (req, res) => {

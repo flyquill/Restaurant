@@ -16,7 +16,6 @@ const TableOrder = ({ table, onBack, onOrderSettled }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // Load categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -29,7 +28,6 @@ const TableOrder = ({ table, onBack, onOrderSettled }) => {
     fetchCategories();
   }, []);
 
-  // Fetch items based on category
   useEffect(() => {
     const fetchItems = async () => {
       setLoadingItems(true);
@@ -46,12 +44,10 @@ const TableOrder = ({ table, onBack, onOrderSettled }) => {
     fetchItems();
   }, [activeCategory]);
 
-  // Load items currently on the table
   const fetchTableCart = async () => {
     setLoadingCart(true);
     try {
       const response = await api.get(`/tables/${table.id}/items`);
-      // Map response fields to cart item structure: { id, name, price, quantity }
       const mapped = response.data.map(item => ({
         id: item.item_id,
         table_item_id: item.table_item_id,
@@ -76,11 +72,9 @@ const TableOrder = ({ table, onBack, onOrderSettled }) => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Add item to table
   const handleAddItem = async (item) => {
     try {
       const response = await api.post(`/tables/${table.id}/items`, { item_id: item.id });
-      // Map updated items list
       const mapped = response.data.map(i => ({
         id: i.item_id,
         table_item_id: i.table_item_id,
@@ -96,15 +90,11 @@ const TableOrder = ({ table, onBack, onOrderSettled }) => {
     }
   };
 
-  // Update item quantity on table
   const handleUpdateQuantity = async (itemId, newQty) => {
     const cartItem = tableCart.find(i => i.id === itemId);
     if (!cartItem) return;
-
     try {
-      const response = await api.put(`/tables/${table.id}/items/${cartItem.table_item_id}`, {
-        quantity: newQty
-      });
+      const response = await api.put(`/tables/${table.id}/items/${cartItem.table_item_id}`, { quantity: newQty });
       const mapped = response.data.map(i => ({
         id: i.item_id,
         table_item_id: i.table_item_id,
@@ -118,11 +108,9 @@ const TableOrder = ({ table, onBack, onOrderSettled }) => {
     }
   };
 
-  // Remove item from table
   const handleRemoveItem = async (itemId) => {
     const cartItem = tableCart.find(i => i.id === itemId);
     if (!cartItem) return;
-
     try {
       const response = await api.delete(`/tables/${table.id}/items/${cartItem.table_item_id}`);
       const mapped = response.data.map(i => ({
@@ -139,19 +127,14 @@ const TableOrder = ({ table, onBack, onOrderSettled }) => {
     }
   };
 
-  // Pay and close table
   const handlePayAndClose = async () => {
     if (tableCart.length === 0) return;
-    
     if (!window.confirm(`Confirm payment and close ${table.name}?`)) return;
-
     setIsProcessing(true);
     try {
       await api.post(`/tables/${table.id}/pay`);
       showToast('🎉 Table order settled!');
-      setTimeout(() => {
-        onOrderSettled();
-      }, 1000);
+      setTimeout(() => onOrderSettled(), 1000);
     } catch (err) {
       console.error('Error closing table:', err);
       alert(err.response?.data?.error || 'Failed to settle table');
@@ -162,50 +145,57 @@ const TableOrder = ({ table, onBack, onOrderSettled }) => {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden -m-6 relative">
-      {/* Menu Area - Left */}
-      <div className="flex-1 flex flex-col p-6 overflow-y-auto">
-        {/* Back header */}
-        <div className="flex items-center space-x-4 mb-4 select-none">
-          <button
-            onClick={onBack}
-            className="flex items-center justify-center h-10 w-10 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
-          >
-            <MdArrowBack size={20} />
-          </button>
-          <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">{table.name} order</h1>
-            <p className="text-slate-400 text-sm mt-0.5">Assigned to: <span className="font-semibold text-slate-600">{table.waiter_name}</span></p>
+      {/* Left panel — fixed layout, grid scrolls independently */}
+      <div className="flex-1 flex flex-col min-h-0">
+
+        {/* Static header — never scrolls */}
+        <div className="flex-shrink-0 px-6 pt-6 pb-4">
+          <div className="flex items-center space-x-4 select-none">
+            <button
+              onClick={onBack}
+              className="flex items-center justify-center h-10 w-10 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              <MdArrowBack size={20} />
+            </button>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800 tracking-tight">{table.name} order</h1>
+              <p className="text-slate-400 text-sm mt-0.5">Assigned to: <span className="font-semibold text-slate-600">{table.waiter_name}</span></p>
+            </div>
           </div>
         </div>
 
-        {/* Categories Bar */}
-        <CategoryBar
-          categories={categories}
-          activeCategory={activeCategory}
-          onSelectCategory={setActiveCategory}
-        />
+        {/* Category bar — never scrolls */}
+        <div className="flex-shrink-0 px-6">
+          <CategoryBar
+            categories={categories}
+            activeCategory={activeCategory}
+            onSelectCategory={setActiveCategory}
+          />
+        </div>
 
-        {/* Items Grid */}
-        <ItemsGrid
-          items={items}
-          loading={loadingItems}
-          onAddItem={handleAddItem}
-        />
+        {/* Items grid — only this scrolls */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6 min-h-0">
+          <ItemsGrid
+            items={items}
+            loading={loadingItems}
+            onAddItem={handleAddItem}
+          />
+        </div>
       </div>
 
-      {/* Cart Area - Right */}
+      {/* Cart — right side */}
       <Cart
         cartItems={tableCart}
         onUpdateQuantity={handleUpdateQuantity}
         onRemove={handleRemoveItem}
-        onClear={null} // Don't show clear cart button for dine-in tables
+        onClear={null}
         onPlaceOrder={handlePayAndClose}
         isPlacing={isProcessing}
         tableName={table.name}
         waiterName={table.waiter_name}
       />
 
-      {/* Success Toast */}
+      {/* Toast */}
       {toast && (
         <div className="absolute bottom-6 right-6 z-50 flex items-center space-x-2 rounded-xl bg-slate-900 px-5 py-3.5 text-white shadow-xl toast-enter border border-white/5">
           <MdCheckCircle className="text-emerald-400" size={20} />

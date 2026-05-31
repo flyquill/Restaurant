@@ -210,7 +210,7 @@ const TablesPage = () => {
 
       {/* Success Toast */}
       {toast && (
-        <div className="absolute bottom-6 right-6 z-50 flex items-center space-x-2 rounded-xl bg-slate-900 px-5 py-3.5 text-white shadow-xl toast-enter border border-white/5">
+        <div className="absolute right-6 z-50 flex items-center space-x-2 rounded-xl bg-slate-900 px-5 py-3.5 text-white shadow-xl toast-enter border border-white/5">
           <MdCheckCircle className="text-emerald-400" size={20} />
           <span className="text-sm font-semibold tracking-wide">{toast}</span>
         </div>

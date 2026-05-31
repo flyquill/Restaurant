@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MdClose } from 'react-icons/md';
 
 const ItemFormModal = ({ isOpen, onClose, onSave, categories, editItem = null }) => {
@@ -8,21 +8,49 @@ const ItemFormModal = ({ isOpen, onClose, onSave, categories, editItem = null })
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Image state
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
+
   // Prefill form if editing
   useEffect(() => {
     if (editItem) {
       setName(editItem.name);
       setPrice(editItem.price);
       setCategoryId(editItem.category_id);
+      setImagePreview(editItem.image_url || null);
     } else {
       setName('');
       setPrice('');
       setCategoryId('');
+      setImagePreview(null);
     }
+    setImageFile(null);
     setError('');
   }, [editItem, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Revoke old object URL to avoid memory leak
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveImage = () => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,7 +71,9 @@ const ItemFormModal = ({ isOpen, onClose, onSave, categories, editItem = null })
     const itemData = {
       name: name.trim(),
       price: priceNum,
-      category_id: parseInt(categoryId)
+      category_id: parseInt(categoryId),
+      image_file: imageFile,
+      image_url: imageFile ? null : imagePreview, // existing URL if no new file
     };
 
     const result = await onSave(itemData);
@@ -126,6 +156,69 @@ const ItemFormModal = ({ isOpen, onClose, onSave, categories, editItem = null })
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Image upload */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-2">
+              Item Image <span className="text-slate-400 font-normal">(optional)</span>
+            </label>
+
+            {imagePreview ? (
+              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-slate-200 group">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+                {/* Hover overlay with actions */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <label className="cursor-pointer bg-white text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                    Change
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                      disabled={submitting}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    disabled={submitting}
+                    className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-primary-400 transition-all group">
+                <svg
+                  className="h-8 w-8 text-slate-300 group-hover:text-primary-400 transition-colors mb-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-xs font-semibold text-slate-400 group-hover:text-primary-500 transition-colors">
+                  Click to upload image
+                </span>
+                <span className="text-xs text-slate-300 mt-0.5">PNG, JPG, WEBP up to 5MB</span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                  disabled={submitting}
+                />
+              </label>
+            )}
           </div>
 
           <button

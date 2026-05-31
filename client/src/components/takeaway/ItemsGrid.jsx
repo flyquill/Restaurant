@@ -4,16 +4,17 @@ import ItemCard from './ItemCard';
 const ItemsGrid = ({ items, loading, onAddItem }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="animate-pulse rounded-2xl bg-white p-5 h-40 shadow-sm border border-slate-100 flex flex-col justify-between">
-            <div>
-              <div className="h-4 w-16 bg-slate-200 rounded-md mb-3" />
+          <div key={i} className="animate-pulse rounded-2xl bg-white shadow-sm border border-slate-100 overflow-hidden">
+            <div className="h-36 bg-slate-200 w-full" />
+            <div className="p-5 flex flex-col gap-3">
+              <div className="h-4 w-16 bg-slate-200 rounded-md" />
               <div className="h-6 w-32 bg-slate-200 rounded-md" />
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="h-6 w-20 bg-slate-200 rounded-md" />
-              <div className="h-9 w-9 bg-slate-200 rounded-xl" />
+              <div className="flex justify-between items-center mt-1">
+                <div className="h-6 w-20 bg-slate-200 rounded-md" />
+                <div className="h-9 w-9 bg-slate-200 rounded-xl" />
+              </div>
             </div>
           </div>
         ))}
@@ -34,7 +35,7 @@ const ItemsGrid = ({ items, loading, onAddItem }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto max-h-[calc(100vh-14rem)] pr-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-start pb-6">
       {items.map((item) => (
         <ItemCard key={item.id} item={item} onAdd={onAddItem} />
       ))}

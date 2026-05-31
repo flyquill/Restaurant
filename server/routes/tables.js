@@ -1,5 +1,5 @@
 // ============================================
-// TABLES ROUTES
+// TABLES ROUTES (With Stock Tracking & Settings Integration)
 // Manage restaurant tables and their orders
 // ============================================
 
@@ -217,29 +217,54 @@ router.post('/:id/pay', authenticate, (req, res) => {
     return res.status(400).json({ error: 'No items on this table' });
   }
 
-  const total = tableItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Calculate base subtotal of items
+  const subtotal = tableItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  // Create order
+  // Fetch dynamic configurations for calculations
+  const taxSetting = get("SELECT value FROM settings WHERE key = 'tax_rate'") || { value: '0' };
+  const serviceSetting = get("SELECT value FROM settings WHERE key = 'service_charges'") || { value: '0' };
+
+  const taxRate = parseFloat(taxSetting.value) / 100;
+  const serviceRate = parseFloat(serviceSetting.value) / 100;
+
+  // Final math containing configuration rules
+  const total = subtotal + (subtotal * taxRate) + (subtotal * serviceRate);
+
+  // Create order log profile
   const orderResult = run(
     'INSERT INTO orders (order_type, table_name, waiter_name, total, created_by) VALUES (?, ?, ?, ?, ?)',
     ['dine-in', table.name, table.waiter_name, total, req.user.id]
   );
 
-  // Save order items
+  const orderId = orderResult.lastInsertRowid;
+
+  // Save order items & deduct from current stock levels
   tableItems.forEach(item => {
     run(
       'INSERT INTO order_items (order_id, item_id, item_name, price, quantity) VALUES (?, ?, ?, ?, ?)',
-      [orderResult.lastInsertRowid, item.item_id, item.name, item.price, item.quantity]
+      [orderId, item.item_id, item.name, item.price, item.quantity]
+    );
+
+    // Synchronize inventory depletion
+    run(
+      `UPDATE inventory 
+       SET current_stock = current_stock - ?, 
+           updated_at = CURRENT_TIMESTAMP 
+       WHERE item_id = ?`,
+      [item.quantity, item.item_id]
     );
   });
 
-  // Clear table
+  // Clear table state back to ready parameters
   run('DELETE FROM table_items WHERE table_id = ?', [id]);
   run("UPDATE tables SET status = 'available', waiter_id = NULL WHERE id = ?", [id]);
 
   res.json({
-    message: 'Table paid and closed successfully',
-    order_id: orderResult.lastInsertRowid,
+    message: 'Table paid and closed successfully. Stock balanced.',
+    order_id: orderId,
+    subtotal,
+    tax: subtotal * taxRate,
+    service_charges: subtotal * serviceRate,
     total,
   });
 });

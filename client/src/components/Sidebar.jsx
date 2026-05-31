@@ -29,7 +29,7 @@ const Sidebar = () => {
       {/* Brand logo space - already in header, but sidebar header gives a unified look */}
       <div className="flex h-16 items-center justify-center border-b border-indigo-950 px-6">
         <span className="text-xl font-black tracking-wider text-white flex items-center gap-2">
-          HOTEL SYSTEM
+          <NavLink key={`/`} to={`/`}>HOTEL SYSTEM </NavLink>
         </span>
       </div>
 

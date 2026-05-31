@@ -7,7 +7,7 @@ const ItemsPage = () => {
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -54,14 +54,30 @@ const ItemsPage = () => {
   // Add or Edit save callback
   const handleSaveItem = async (itemData) => {
     try {
+      // If image is a File object, upload it first
+      let imageUrl = itemData.image_url;
+      if (itemData.image_file instanceof File) {
+        const formData = new FormData();
+        formData.append('image', itemData.image_file);
+        const uploadRes = await api.post('/items/upload-image', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        imageUrl = uploadRes.data.url;
+      }
+
+      const payload = {
+        name: itemData.name,
+        category_id: itemData.category_id,
+        price: itemData.price,
+        image_url: imageUrl || null,
+      };
+
       if (editingItem) {
-        // Update Item
-        await api.put(`/items/${editingItem.id}`, itemData);
-        showToast(`Updated item "${itemData.name}"`);
+        await api.put(`/items/${editingItem.id}`, payload);
+        showToast(`Updated item "${payload.name}"`);
       } else {
-        // Create Item
-        await api.post('/items', itemData);
-        showToast(`Created item "${itemData.name}"`);
+        await api.post('/items', payload);
+        showToast(`Created item "${payload.name}"`);
       }
       await fetchItems();
       return { success: true };
@@ -158,7 +174,8 @@ const ItemsPage = () => {
           <div className="h-14 bg-slate-50 border-b border-slate-100" />
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-16 border-b border-slate-100 flex items-center px-6 justify-between">
-              <div className="flex space-x-6 flex-1">
+              <div className="flex space-x-6 flex-1 items-center">
+                <div className="h-10 w-10 bg-slate-200 rounded-lg" />
                 <div className="h-4 w-32 bg-slate-200 rounded-md" />
                 <div className="h-4 w-24 bg-slate-200 rounded-md" />
                 <div className="h-4 w-16 bg-slate-200 rounded-md" />
@@ -181,6 +198,8 @@ const ItemsPage = () => {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
+                  {/* NEW: Image column */}
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-16">Image</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Item Name</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Category</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Price (PKR)</th>
@@ -190,6 +209,22 @@ const ItemsPage = () => {
               <tbody className="divide-y divide-slate-100 bg-white">
                 {filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                    {/* NEW: Item thumbnail */}
+                    <td className="whitespace-nowrap px-6 py-3">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="h-10 w-10 rounded-lg object-cover border border-slate-100 shadow-sm"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-300">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
+                    </td>
                     <td className="whitespace-nowrap px-6 py-4 font-bold text-slate-800 text-sm">{item.name}</td>
                     <td className="whitespace-nowrap px-6 py-4">
                       <span className="inline-flex rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-primary-600">
@@ -236,7 +271,7 @@ const ItemsPage = () => {
 
       {/* Success Toast */}
       {toast && (
-        <div className="absolute bottom-6 right-6 z-50 flex items-center space-x-2 rounded-xl bg-slate-900 px-5 py-3.5 text-white shadow-xl toast-enter border border-white/5">
+        <div className="absolute right-6 z-50 flex items-center space-x-2 rounded-xl bg-slate-900 px-5 py-3.5 text-white shadow-xl toast-enter border border-white/5">
           <MdCheckCircle className="text-emerald-400" size={20} />
           <span className="text-sm font-semibold tracking-wide">{toast}</span>
         </div>

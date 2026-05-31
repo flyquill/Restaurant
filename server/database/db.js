@@ -53,6 +53,7 @@ async function initDatabase() {
       price       REAL    NOT NULL,
       category_id INTEGER NOT NULL,
       is_active   INTEGER DEFAULT 1,
+      image_url   TEXT,
       FOREIGN KEY (category_id) REFERENCES categories(id)
     )
   `);
@@ -107,6 +108,61 @@ async function initDatabase() {
       price     REAL    NOT NULL,
       quantity  INTEGER NOT NULL,
       FOREIGN KEY (order_id) REFERENCES orders(id)
+    )
+  `);
+
+  // ============================================
+  // PHASE 2 TABLES: STOCK, REPORTS & SETTINGS
+  // ============================================
+
+  // 1. Inventory Stock Table (Direct 1:1 mapping with items)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id       INTEGER NOT NULL UNIQUE,
+      current_stock INTEGER NOT NULL DEFAULT 0,
+      min_stock     INTEGER NOT NULL DEFAULT 10,
+      unit          TEXT    DEFAULT 'pcs',
+      supplier_name TEXT,
+      updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+    )
+  `);
+
+  // 2. Waste Logs Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS waste_logs (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id     INTEGER NOT NULL,
+      quantity    INTEGER NOT NULL,
+      reason      TEXT    NOT NULL,
+      logged_by   INTEGER,
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (item_id) REFERENCES items(id),
+      FOREIGN KEY (logged_by) REFERENCES users(id)
+    )
+  `);
+
+  // 3. Supplier Purchase Orders Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS purchase_orders (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      supplier_name TEXT NOT NULL,
+      item_id       INTEGER NOT NULL,
+      quantity      INTEGER NOT NULL,
+      cost_price    REAL NOT NULL,
+      status        TEXT DEFAULT 'pending', -- 'pending' or 'received'
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      received_at   DATETIME,
+      FOREIGN KEY (item_id) REFERENCES items(id)
+    )
+  `);
+
+  // 4. Global System Configuration Table (Key-Value Store)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
     )
   `);
 
