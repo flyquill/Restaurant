@@ -7,7 +7,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "80:5173" # Maps port 3000 on your machine to port 3000 in the container
+      - "80:80" # Maps port 3000 on your machine to port 3000 in the container
     environment:
       - NODE_ENV=development
     depends_on:

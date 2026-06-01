@@ -54,6 +54,7 @@ async function initDatabase() {
       category_id INTEGER NOT NULL,
       is_active   INTEGER DEFAULT 1,
       image_url   TEXT,
+      variable_by REAL    DEFAULT 1.00,
       FOREIGN KEY (category_id) REFERENCES categories(id)
     )
   `);

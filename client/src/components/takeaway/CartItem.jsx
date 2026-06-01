@@ -2,6 +2,29 @@ import React from 'react';
 import { MdAdd, MdRemove, MdDeleteOutline } from 'react-icons/md';
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
+  // Use the unique database multiplier step per dish (fallback to 1 if empty)
+  console.log(item);
+  const step = Number(item.variable_by || 1.00);
+
+  const handleDecrease = () => {
+    if (item.quantity > step) {
+      // Clean decimal floating-point rounding rule
+      const newQty = Number((item.quantity - step).toFixed(2));
+      onUpdateQuantity(item.id, newQty);
+    } else {
+      // Drop completely from array if quantity hits zero/below threshold boundary
+      onRemove(item.id);
+    }
+  };
+
+  const handleIncrease = () => {
+    const newQty = Number((item.quantity + step).toFixed(2));
+    onUpdateQuantity(item.id, newQty);
+  };
+
+  // Prettifies layout string values dynamically (keeps .25, .5, drops integer trailing zeros)
+  const formattedQuantity = Number(item.quantity).toFixed(2).replace(/\.00$/, '');
+
   return (
     <div className="flex items-center justify-between py-4 border-b border-slate-100 last:border-b-0 animate-fade-in">
       {/* Item info */}
@@ -17,25 +40,25 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
         {/* Quantity Controls */}
         <div className="flex items-center bg-slate-100 rounded-lg p-1">
           <button
-            onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+            onClick={handleDecrease}
             className="p-1 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 transition-colors"
           >
             <MdRemove size={16} />
           </button>
           
-          <span className="w-8 text-center text-sm font-bold text-slate-800">
-            {item.quantity}
+          <span className="w-10 text-center text-sm font-bold text-slate-800">
+            {formattedQuantity}
           </span>
           
           <button
-            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+            onClick={handleIncrease}
             className="p-1 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 transition-colors"
           >
             <MdAdd size={16} />
           </button>
         </div>
 
-        {/* Total Price */}
+        {/* Total Price (Safely computed based on step counts) */}
         <span className="w-20 text-right text-sm font-extrabold text-slate-900">
           ₨ {(item.price * item.quantity).toLocaleString()}
         </span>
