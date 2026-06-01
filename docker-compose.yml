@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  # Frontend Service
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "80:5173" # Maps port 3000 on your machine to port 3000 in the container
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - server # Tells Docker to start the server before starting the client
+
+  # Backend Service
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000" # Maps port 5000 on your machine to port 5000 in the container
+    environment:
+      - NODE_ENV=production
+      # Add your database URI or other env variables here
