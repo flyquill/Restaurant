@@ -7,8 +7,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import Google Font: Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* Import Google Font: Inter & Noto Nastaliq Urdu */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400..700&display=swap');
 
 /* ============================================
    BASE STYLES
@@ -20,9 +20,22 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  /* Adding Noto Nastaliq Urdu right after Inter. 
+     English text will use Inter, and Urdu text will automatically fall back to Naskh! */
+  font-family: 'Inter', 'Noto Nastaliq Urdu', system-ui, sans-serif;
   background-color: #f1f5f9;
   color: #1e293b;
+}
+
+/* ============================================
+   URDU SPECIFIC UTILITY
+   ============================================ */
+/* It's highly recommended to wrap your Urdu text in an element with lang="ur" 
+   so the layout changes direction naturally and scales perfectly. */
+[lang="ur"] {
+  direction: rtl;
+  text-align: right;
+  line-height: 1.8; /* Urdu script needs extra breathing room vertically */
 }
 
 /* ============================================

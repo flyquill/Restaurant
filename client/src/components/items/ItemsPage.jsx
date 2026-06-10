@@ -18,6 +18,8 @@ const ItemsPage = () => {
 
   const [toast, setToast] = useState(null);
 
+  const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, ''); // strip trailing slash
+
   const fetchItems = async () => {
     try {
       const response = await api.get('/items');
@@ -213,7 +215,7 @@ const ItemsPage = () => {
                     <td className="whitespace-nowrap px-6 py-3">
                       {item.image_url ? (
                         <img
-                          src={item.image_url}
+                          src={`${base}${item.image_url}`}
                           alt={item.name}
                           className="h-10 w-10 rounded-lg object-cover border border-slate-100 shadow-sm"
                         />

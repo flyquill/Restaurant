@@ -24,7 +24,7 @@ const TableCard = ({ table, waiters, onAssignWaiter, onOpenOrder, onDelete, isAd
             <MdOutlineTableRestaurant size={22} />
           </span>
           <div>
-            <h4 className="font-extrabold text-slate-800 tracking-tight">{table.name}</h4>
+            <h4 className="font-extrabold text-slate-800 tracking-tight text-lg">{table.name}</h4>
             <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold mt-1 ${
               isOccupied ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'
             }`}>
@@ -68,7 +68,7 @@ const TableCard = ({ table, waiters, onAssignWaiter, onOpenOrder, onDelete, isAd
             <select
               value={selectedWaiter}
               onChange={(e) => setSelectedWaiter(e.target.value)}
-              className="block w-full rounded-xl border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-600 bg-slate-50 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all cursor-pointer"
+              className="block w-full rounded-xl border border-slate-200 py-2.5 px-3 text-lg font-medium text-slate-600 bg-slate-50 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all cursor-pointer"
             >
               <option value="">Select Waiter...</option>
               {waiters.map((w) => (
