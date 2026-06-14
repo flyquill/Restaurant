@@ -26,19 +26,48 @@ const TakeawayPage = () => {
     fetchCategories();
   }, []);
 
+  // Inside TakeawayPage.jsx
+
   useEffect(() => {
     const fetchItems = async () => {
       setLoadingItems(true);
       try {
         const url = activeCategory ? `/items?category=${activeCategory}` : '/items';
         const response = await api.get(url);
-        setItems(response.data);
+        const rawItems = response.data;
+
+        // 1. Retrieve the saved order array from localStorage
+        const savedOrderString = localStorage.getItem('takeaway_items_order');
+
+        if (savedOrderString) {
+          const savedOrder = JSON.parse(savedOrderString); // This is an array of IDs
+
+          // 2. Sort incoming items to match the order of IDs in our saved array
+          const sortedItems = [...rawItems].sort((a, b) => {
+            const indexA = savedOrder.indexOf(a.id);
+            const indexB = savedOrder.indexOf(b.id);
+
+            // If an item isn't in the saved configuration (e.g., a newly created item), 
+            // push it to the end of the list safely
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+
+            return indexA - indexB;
+          });
+
+          setItems(sortedItems);
+        } else {
+          // Fallback to default backend order if nothing is saved in localStorage yet
+          setItems(rawItems);
+        }
+
       } catch (err) {
         console.error('Error fetching items:', err);
       } finally {
         setLoadingItems(false);
       }
     };
+
     fetchItems();
   }, [activeCategory]);
 
@@ -130,6 +159,7 @@ const TakeawayPage = () => {
         <div className="flex-1 overflow-y-auto px-6 pb-6 min-h-0">
           <ItemsGrid
             items={items}
+            setItems={setItems}
             loading={loadingItems}
             onAddItem={handleAddItem}
           />

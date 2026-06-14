@@ -15,12 +15,12 @@ const printReceipt = ({ cartItems, subtotal, tableName, waiterName, orderNumber,
   const taxPercent = parseFloat(config?.tax_rate || 0);
   const servicePercent = parseFloat(config?.service_charges || 0);
 
-  const taxAmount = Math.round(subtotal * (taxPercent / 100));
-  const serviceAmount = Math.round(subtotal * (servicePercent / 100));
-  const grandTotal = subtotal + taxAmount + serviceAmount;
-
   const orderType = tableName || 'Takeaway';
   const orderNum = orderNumber || `#${Date.now().toString().slice(-4)}`;
+
+  const taxAmount = Math.round(subtotal * (taxPercent / 100));
+  const serviceAmount = orderType == 'Takeaway' ? 0 : Math.round(subtotal * (servicePercent / 100));
+  const grandTotal = subtotal + taxAmount + serviceAmount;
 
   const customerRows = cartItems.map(item => `
     <tr>
@@ -154,26 +154,10 @@ const printReceipt = ({ cartItems, subtotal, tableName, waiterName, orderNumber,
       <div class="totals-row grand-total"><span class="label">GRAND TOTAL</span><span class="value">Rs. ${grandTotal.toLocaleString()}</span></div>
     </div>
     <div class="footer">
-      <span class="thank-you-urdu">تشریف آوری کا شکریہ! 🙏</span>
+      <span class="thank-you-urdu">تشریف آوری کا شکریہ!</span>
       <span class="thank-you-eng">Thank you for dining with us!</span>
       <span class="powered">Powered by ${restaurantName} POS</span>
     </div>
-  </div>
-  <div class="cut-line">✂ &nbsp;&nbsp; CUT HERE &nbsp;&nbsp; ✂</div>
-  <!-- RECEIPT 2: KITCHEN ORDER TICKET -->
-  <div class="receipt kot kot-section">
-    <div class="kot-header"><div class="kot-title">KITCHEN ORDER<span class="kot-sub">— K O T —</span></div></div>
-    <div class="kot-meta">
-      <div class="kot-meta-row"><span class="km-label">Order #</span><span class="km-value">${orderNum}</span></div>
-      <div class="kot-meta-row"><span class="km-label">Type</span><span class="km-value">${orderType}</span></div>
-      ${waiterName ? `<div class="kot-meta-row"><span class="km-label">Waiter</span><span class="km-value">${waiterName}</span></div>` : ''}
-      <div class="kot-meta-row"><span class="km-label">Time</span><span class="km-value" style="font-size:12px;">${timeStr}</span></div>
-    </div>
-    <table class="kot-items">
-      <thead><tr><th class="ki-item">Item</th><th class="ki-qty">Qty</th></tr></thead>
-      <tbody>${kotRows}</tbody>
-    </table>
-    <div class="kot-footer">Printed: ${dateStr} — ${timeStr}<br/>— End of Kitchen Ticket —</div>
   </div>
 </body>
 </html>`;
@@ -227,7 +211,7 @@ const Cart = ({
   const taxPercent = parseFloat(config.tax_rate || 0);
   const servicePercent = parseFloat(config.service_charges || 0);
   const taxAmount = Math.round(subtotal * (taxPercent / 100));
-  const serviceAmount = Math.round(subtotal * (servicePercent / 100));
+  const serviceAmount = tableName ? Math.round(subtotal * (servicePercent / 100)) : 0;
   const grandTotal = subtotal + taxAmount + serviceAmount;
 
   // Calculates overall total units accurately counting decimals
@@ -323,7 +307,7 @@ const Cart = ({
               <span>₨ {taxAmount.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-sm text-slate-500 font-medium">
-              <span>Service Charges ({servicePercent}%)</span>
+              <span>Service Charges ({tableName ? servicePercent : '0'}%)</span>
               <span>₨ {serviceAmount.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center pt-3 border-t border-slate-200">

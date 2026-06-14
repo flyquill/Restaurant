@@ -1,7 +1,39 @@
 import React from 'react';
 import ItemCard from './ItemCard';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
+import { restrictToWindowEdges } from '@dnd-kit/modifiers';
+import SortableItem from './SortableItem'; // We will create this wrapper next
 
-const ItemsGrid = ({ items, loading, onAddItem }) => {
+const ItemsGrid = ({ items, setItems, loading, onAddItem }) => {
+  // Set up sensors for drag detection (Pointer for mouse/touch, Keyboard for accessibility)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Requires moving 8px before dragging starts (prevents accidental drags on clicks)
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
+
+  // Handle what happens when an item is dropped
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+      
+      const updatedItems = arrayMove(items, oldIndex, newIndex);
+      setItems(updatedItems);
+
+      // Save just the array of IDs in their custom sequence to localStorage
+      const orderedIds = updatedItems.map(item => item.id);
+      localStorage.setItem('takeaway_items_order', JSON.stringify(orderedIds));
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
@@ -35,11 +67,23 @@ const ItemsGrid = ({ items, loading, onAddItem }) => {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-start pb-6">
-      {items.map((item) => (
-        <ItemCard key={item.id} item={item} onAdd={onAddItem} />
-      ))}
-    </div>
+    <DndContext 
+      sensors={sensors} 
+      collisionDetection={closestCenter} 
+      onDragEnd={handleDragEnd}
+      modifiers={[restrictToWindowEdges]}
+    >
+      {/* rectSortingStrategy is crucial for multi-column/row grid layouts */}
+      <SortableContext items={items.map(i => i.id)} strategy={rectSortingStrategy}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-start pb-6">
+          {items.map((item) => (
+            <SortableItem key={item.id} id={item.id}>
+              <ItemCard item={item} onAdd={onAddItem} />
+            </SortableItem>
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 };
 
