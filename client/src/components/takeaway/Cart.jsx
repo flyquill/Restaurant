@@ -196,7 +196,7 @@ const Cart = ({
         setConfig({
           restaurant_name: res.data.restaurant_name || '',
           tax_rate: res.data.tax_rate || '0',
-          service_charges: res.data.service_charges || '0',
+          service_charges: tableName ? res.data.service_charges : '0',
           currency: res.data.currency || 'PKR'
         });
       }
@@ -211,7 +211,7 @@ const Cart = ({
   const taxPercent = parseFloat(config.tax_rate || 0);
   const servicePercent = parseFloat(config.service_charges || 0);
   const taxAmount = Math.round(subtotal * (taxPercent / 100));
-  const serviceAmount = tableName ? Math.round(subtotal * (servicePercent / 100)) : 0;
+  const serviceAmount = Math.round(subtotal * (servicePercent / 100));
   const grandTotal = subtotal + taxAmount + serviceAmount;
 
   // Calculates overall total units accurately counting decimals
